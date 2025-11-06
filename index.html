@@ -1,0 +1,2497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub-3 Marathon Training Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .header .goal {
+            font-size: 3em;
+            font-weight: 700;
+            color: #4CAF50;
+            margin: 15px 0;
+        }
+
+        .header .date {
+            font-size: 1.1em;
+            color: #888;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: #4CAF50;
+        }
+
+        .card h3 {
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .card .label {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .zones {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .zones h2 {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .zone-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .zone {
+            padding: 15px;
+            background: #0f0f0f;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .zone.easy { border-left-color: #2196F3; }
+        .zone.mp { border-left-color: #4CAF50; }
+        .zone.tempo { border-left-color: #FF9800; }
+        .zone.interval { border-left-color: #f44336; }
+
+        .zone .zone-name {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .zone .zone-pace {
+            font-size: 1.2em;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .zone .zone-desc {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .calendar {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .calendar h2 {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .phase {
+            margin-bottom: 35px;
+        }
+
+        .phase-header {
+            background: #0f0f0f;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        /* Phase-specific colors */
+        .phase:nth-child(1) .phase-header {
+            border-left-color: #4CAF50; /* Green - Base & Efficiency */
+        }
+
+        .phase:nth-child(1) .week.current {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .phase:nth-child(1) .week:hover {
+            border-color: #4CAF50;
+        }
+
+        .phase:nth-child(2) .phase-header {
+            border-left-color: #2196F3; /* Blue - Marathon-Specific */
+        }
+
+        .phase:nth-child(2) .week.current {
+            border-color: #2196F3;
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+        }
+
+        .phase:nth-child(2) .week:hover {
+            border-color: #2196F3;
+        }
+
+        .phase:nth-child(3) .phase-header {
+            border-left-color: #FF9800; /* Orange - Peak */
+        }
+
+        .phase:nth-child(3) .week.current {
+            border-color: #FF9800;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.3);
+        }
+
+        .phase:nth-child(3) .week:hover {
+            border-color: #FF9800;
+        }
+
+        .phase:nth-child(4) .phase-header {
+            border-left-color: #f44336; /* Red - Taper & Race */
+        }
+
+        .phase:nth-child(4) .week.current {
+            border-color: #f44336;
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .phase:nth-child(4) .week:hover {
+            border-color: #f44336;
+        }
+
+        .phase-header h3 {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .phase-header .phase-desc {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .weeks {
+            display: grid;
+            gap: 12px;
+        }
+
+        .week {
+            background: #0f0f0f;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week:hover {
+            background: #1a1a1a;
+            border-color: #4CAF50;
+        }
+
+        .week.completed {
+            opacity: 0.6;
+            border-color: #4CAF50;
+        }
+
+        .week.current {
+            border: 2px solid #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .week-number {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .week-distance {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #4CAF50;
+        }
+
+        .week-details {
+            font-size: 0.9em;
+            color: #888;
+            line-height: 1.8;
+        }
+
+        .week-details strong {
+            color: #fff;
+        }
+
+        .day {
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a2a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day:hover {
+            background: #151515;
+            padding-left: 10px;
+        }
+
+        .day:last-child {
+            border-bottom: none;
+        }
+
+        .day-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .day-name {
+            display: inline-block;
+            width: 60px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .expand-icon {
+            font-size: 0.8em;
+            color: #4CAF50;
+            transition: transform 0.2s;
+            display: inline-block;
+            width: 15px;
+        }
+
+        .day.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .day-content {
+            flex: 1;
+        }
+
+        .day-explanation {
+            display: none;
+            background: #0a0a0a;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 12px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .day.expanded .day-explanation {
+            display: block;
+        }
+
+        .explanation-section {
+            margin-bottom: 15px;
+        }
+
+        .explanation-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .explanation-title {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+        }
+
+        .explanation-text {
+            color: #ccc;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .workout-structure {
+            background: #151515;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .workout-structure .step {
+            padding: 4px 0;
+            color: #bbb;
+        }
+
+        .workout-structure .step strong {
+            color: #4CAF50;
+        }
+
+        .checkpoints {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .checkpoints h2 {
+            font-size: 1.5em;
+            font-weight: 300;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .checkpoint {
+            background: #0f0f0f;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #FF9800;
+        }
+
+        .checkpoint h4 {
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .checkpoint .target {
+            color: #4CAF50;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .checkpoint .desc {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .header .goal {
+                font-size: 2em;
+            }
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Marathon Training Dashboard</h1>
+        <div class="goal">&lt; 3:00:00</div>
+        <div class="date">16-Week Training Plan | Target: 4:16/km</div>
+        <div class="date" id="todayDate" style="margin-top: 10px; font-size: 0.95em; color: #4CAF50;"></div>
+    </div>
+
+    <div class="dashboard">
+        <div class="card">
+            <h3>Current Week</h3>
+            <div class="value" id="currentWeek">1</div>
+            <div class="label">of 16 weeks</div>
+        </div>
+        <div class="card">
+            <h3>Total Progress</h3>
+            <div class="value" id="progressPercent">6%</div>
+            <div class="label">Plan completion</div>
+        </div>
+        <div class="card">
+            <h3>Weekly Volume</h3>
+            <div class="value" id="weeklyKm">50-55</div>
+            <div class="label">kilometers</div>
+        </div>
+        <div class="card">
+            <h3>Days to Race</h3>
+            <div class="value" id="daysToRace">112</div>
+            <div class="label">days remaining</div>
+        </div>
+    </div>
+
+    <div class="zones">
+        <h2>Training Zones (Sub-3 Target)</h2>
+        <div class="zone-grid">
+            <div class="zone easy">
+                <div class="zone-name">Easy / Recovery</div>
+                <div class="zone-pace">5:20-5:50/km</div>
+                <div class="zone-desc">Conversational pace, nose breathing</div>
+            </div>
+            <div class="zone easy">
+                <div class="zone-name">Long Run Easy</div>
+                <div class="zone-pace">5:00-5:30/km</div>
+                <div class="zone-desc">Comfortable endurance pace</div>
+            </div>
+            <div class="zone mp">
+                <div class="zone-name">Marathon Pace (MP)</div>
+                <div class="zone-pace">4:15-4:20/km</div>
+                <div class="zone-desc">Target race pace</div>
+            </div>
+            <div class="zone tempo">
+                <div class="zone-name">Tempo / Threshold (T)</div>
+                <div class="zone-pace">3:55-4:05/km</div>
+                <div class="zone-desc">Comfortably hard, 30-40min</div>
+            </div>
+            <div class="zone interval">
+                <div class="zone-name">Intervals (I)</div>
+                <div class="zone-pace">3:40-3:55/km</div>
+                <div class="zone-desc">VO2max, 3-5min reps</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="checkpoints">
+        <h2>Key Checkpoints</h2>
+        <div class="checkpoint">
+            <h4>Checkpoint 1: 10K Test (Weeks 6-8)</h4>
+            <div class="target">Target: 38:30-39:30</div>
+            <div class="desc">Validates sub-3 fitness level</div>
+        </div>
+        <div class="checkpoint">
+            <h4>Checkpoint 2: Half Marathon (Weeks 9-11)</h4>
+            <div class="target">Target: 1:25-1:27</div>
+            <div class="desc">Critical indicator for marathon readiness</div>
+        </div>
+        <div class="checkpoint">
+            <h4>Checkpoint 3: Peak Long Run (Week 12-13)</h4>
+            <div class="target">Target: 28-32K with 14-16K @ MP</div>
+            <div class="desc">Final validation of marathon pace sustainability</div>
+        </div>
+    </div>
+
+    <div class="calendar" id="calendar">
+        <h2>16-Week Training Calendar (Click any day for details ▼)</h2>
+        <!-- Calendar will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+        // Training plan data structure
+        const trainingPlan = {
+            phases: [
+                {
+                    name: "Phase 1: Base & Efficiency",
+                    desc: "Weeks 1-4 | Build controlled volume, recover from 30K, establish foundation",
+                    weeks: [
+                        {
+                            weekNum: 1,
+                            label: "Week 1 (Nov 10-16)",
+                            distance: "50-55K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy + mobility",
+                                    type: "Easy/Rest",
+                                    explanation: {
+                                        what: "This is a recovery day. You just ran 30K yesterday (Sunday), so your body needs rest. If you feel good, you can do a very short, easy run (6-8 kilometers) followed by mobility work.",
+                                        why: "After a long run, your muscles have micro-tears and your energy stores are depleted. Rest allows your body to repair and adapt, making you stronger.",
+                                        howToFeel: "If you run today, it should feel effortless. You should be able to breathe through your nose the entire time. If you're sore or tired, take the full day off.",
+                                        structure: [
+                                            "Option A: Complete rest day (recommended after 30K)",
+                                            "Option B: 6-8K at 5:30-5:50/km pace",
+                                            "Followed by: 10-15 minutes of mobility work"
+                                        ],
+                                        mobility: "Hip circles, leg swings (front/back, side/side), calf stretches, hip flexor stretches, hamstring stretches. Hold each stretch for 30 seconds. Don't bounce."
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "2 × 8min @ Tempo (T) + warm-up/cool-down",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "This is a TEMPO workout (also called 'Threshold' or 'T' workout). It means running at a 'comfortably hard' pace for specific intervals.",
+                                        why: "Tempo runs teach your body to clear lactate (the burning feeling in your legs) more efficiently. This improves your endurance and raises the pace you can sustain for long periods.",
+                                        howToFeel: "During the 8-minute tempo sections, you should feel like you're working hard but still in control. You could speak a few words but not full sentences. It's roughly your half-marathon effort level.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy jogging (5:30-5:50/km)",
+                                            "Dynamic drills: 5 minutes of leg swings, high knees, butt kicks, lunges",
+                                            "Main set: 8 minutes @ 3:55-4:05/km pace (TEMPO)",
+                                            "Recovery: 3 minutes easy jogging or walking",
+                                            "Main set: 8 minutes @ 3:55-4:05/km pace (TEMPO)",
+                                            "Cool-down: 2K easy jogging"
+                                        ],
+                                        totalTime: "~50-60 minutes total",
+                                        paceCheck: "For the 8-minute tempo sections: aim for 3:55-4:05 per kilometer. If you run 2 kilometers in each 8-minute block, you'll cover about 4-4.2K total tempo running."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "8-10K easy + 15-20min strength",
+                                    type: "Easy Run + Strength",
+                                    explanation: {
+                                        what: "An EASY RUN followed by strength training. Easy run means conversational pace - so slow it feels almost too easy.",
+                                        why: "Easy runs build your aerobic base (your endurance engine) without creating fatigue. Strength training prevents injuries by strengthening muscles, tendons, and joints that support your running.",
+                                        howToFeel: "The run should feel relaxed and comfortable. You should be able to talk in full sentences or even sing. If you're breathing hard, slow down.",
+                                        structure: [
+                                            "Run: 8-10K at 5:20-5:50/km pace (totally comfortable)",
+                                            "Time: ~45-60 minutes of running",
+                                            "Then strength work (15-20 minutes):"
+                                        ],
+                                        strengthWork: [
+                                            "Single-leg deadlifts: 3 sets of 10 each leg",
+                                            "Bulgarian split squats: 3 sets of 8 each leg",
+                                            "Glute bridges: 3 sets of 15",
+                                            "Planks: 3 × 45 seconds",
+                                            "Clamshells with band: 2 sets of 15 each side"
+                                        ],
+                                        tips: "Use bodyweight or light dumbbells. Focus on control and form, not heavy weight. This is injury prevention, not bodybuilding."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "10K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "A straightforward EASY RUN. No intervals, no tempo, just comfortable running.",
+                                        why: "Easy runs are the foundation of marathon training. They build aerobic fitness, teach your body to burn fat efficiently, and promote recovery while still adding training volume.",
+                                        howToFeel: "Same as Wednesday - conversational pace. You should finish feeling like you could have kept going.",
+                                        structure: [
+                                            "10 kilometers at 5:20-5:50/km",
+                                            "Total time: ~55-65 minutes",
+                                            "Keep heart rate low, breathing comfortable"
+                                        ],
+                                        tips: "Don't check your pace constantly. Run by feel. If you feel good, don't speed up - save that energy for quality days (Tuesday, Sunday)."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "A REST DAY or optional cross-training. Cross-training means low-impact cardio like cycling, swimming, or elliptical.",
+                                        why: "After 4 days of running, your legs need a break before the weekend's workouts. Cross-training maintains fitness without the impact stress of running.",
+                                        structure: [
+                                            "Option A: Complete rest (recommended if feeling tired)",
+                                            "Option B: 30-40 minutes easy cycling or swimming",
+                                            "Option C: Yoga or stretching session"
+                                        ],
+                                        tips: "If you cross-train, keep intensity VERY low. This is active recovery, not another workout."
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + 4-6 strides",
+                                    type: "Easy Run + Strides",
+                                    explanation: {
+                                        what: "Easy run followed by STRIDES. Strides are short, fast accelerations (about 100 meters or 20-30 seconds) at a controlled fast pace.",
+                                        why: "Strides wake up your neuromuscular system and prepare you for tomorrow's long run. They improve running efficiency and keep your legs feeling 'snappy' without creating fatigue.",
+                                        howToFeel: "The easy run is comfortable. Strides should feel smooth and controlled-fast, NOT all-out sprints. Think 85-90% effort.",
+                                        structure: [
+                                            "Run: 8-10K at 5:20-5:50/km (easy pace)",
+                                            "Then do 4-6 strides:",
+                                            "  • Pick a flat stretch (100m or ~25 seconds)",
+                                            "  • Gradually accelerate to about 85% effort",
+                                            "  • Hold that pace briefly, then gradually slow down",
+                                            "  • Walk back to start (full recovery)",
+                                            "  • Repeat 4-6 times"
+                                        ],
+                                        tips: "Strides are NOT sprints. Focus on smooth, relaxed form. You should feel fast but controlled, never straining."
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "18-20K long run (5:00-5:30/km)",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Your weekly LONG RUN. This is the cornerstone of marathon training - a long, slow distance run.",
+                                        why: "Long runs teach your body to burn fat for fuel, build muscular endurance, strengthen bones and tendons, and adapt your body to spending time on your feet.",
+                                        howToFeel: "Start comfortable, stay comfortable. You should be able to hold a conversation throughout. The goal is TIME ON FEET, not speed.",
+                                        structure: [
+                                            "18-20 kilometers at 5:00-5:30/km",
+                                            "Total time: ~1:45-2:00 hours",
+                                            "Start slower than you think necessary",
+                                            "Take water/nutrition if needed after 60 minutes"
+                                        ],
+                                        nutrition: "If running over 90 minutes, consider taking 1 gel or a few energy chews after 60 minutes. Practice race-day fueling strategy.",
+                                        tips: "This is a recovery week long run (shorter than your 30K). Don't race it. Save your legs for bigger long runs later in the plan."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 2,
+                            label: "Week 2 (Nov 17-23)",
+                            distance: "55-60K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery day after your long run.",
+                                        why: "Allows adaptation from yesterday's long run.",
+                                        howToFeel: "If running, totally conversational and easy.",
+                                        structure: [
+                                            "Option A: Full rest",
+                                            "Option B: 6-8K at 5:30-5:50/km"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "3 × 8min @ Tempo (3:55-4:05/km)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "Same concept as last Tuesday, but THREE tempo intervals instead of two. You're progressing.",
+                                        why: "Increases your threshold fitness - the pace you can hold 'comfortably hard' for extended periods.",
+                                        howToFeel: "Each 8-minute block should feel challenging but sustainable. Not gasping for air, but definitely working.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "3 × 8 minutes @ 3:55-4:05/km",
+                                            "3 minutes easy jog between each interval",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~55-65 minutes total",
+                                        paceCheck: "In 8 minutes at tempo pace, you'll cover roughly 2.0-2.1 kilometers. Total tempo distance: ~6-6.3K."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "8-10K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run followed by strength routine.",
+                                        why: "Maintains aerobic base while building injury-resistant strength.",
+                                        structure: [
+                                            "8-10K at 5:20-5:50/km",
+                                            "15-20 min strength: focus on glutes, core, single-leg stability"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "10-12K with final 3-4K steady (4:25-4:35/km)",
+                                    type: "Progression Run",
+                                    explanation: {
+                                        what: "This is a PROGRESSION RUN - you start easy and finish at a 'steady' pace (slightly faster than easy, but not marathon pace yet).",
+                                        why: "Teaches your body to run faster when already tired. Simulates the back half of a marathon.",
+                                        howToFeel: "Start easy and comfortable. The final 3-4K should feel 'moderately hard' - faster than easy but controlled.",
+                                        structure: [
+                                            "First 6-8K: Easy pace (5:20-5:50/km)",
+                                            "Final 3-4K: Steady pace (4:25-4:35/km)",
+                                            "Total: 10-12K"
+                                        ],
+                                        tips: "Don't go too hard on the steady section. It's faster than easy, but NOT marathon pace. Save MP work for specific workouts later."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest or light cross-training.",
+                                        why: "Recovery before weekend.",
+                                        structure: [
+                                            "Rest or 30 min easy bike/swim"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides to prep for tomorrow.",
+                                        why: "Wakes up legs before long run.",
+                                        structure: [
+                                            "8-10K easy",
+                                            "4-6 × 100m strides"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "20-22K, last 3-5K steady",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Long run with a 'steady' finish - slightly faster than easy pace for the final kilometers.",
+                                        why: "Builds endurance while teaching you to pick up pace when tired.",
+                                        howToFeel: "Most of the run is easy. Final 3-5K should feel like a gentle push - not hard, but definitely not easy.",
+                                        structure: [
+                                            "First 15-17K: Easy pace (5:00-5:30/km)",
+                                            "Final 3-5K: Steady pace (4:25-4:35/km)",
+                                            "Total: 20-22K"
+                                        ],
+                                        tips: "Don't hammer the steady section. It's a gradual uptick in effort, not a sprint finish."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 3,
+                            label: "Week 3 (Nov 24-30)",
+                            distance: "60-65K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery from long run.",
+                                        structure: ["Rest or easy 6-8K"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "4 × 6min @ T (2-3min easy between)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "FOUR tempo intervals, but shorter duration (6 minutes instead of 8). This lets you maintain quality with slightly less recovery.",
+                                        why: "Continues building threshold fitness with a different stimulus - shorter reps at same effort.",
+                                        howToFeel: "Same comfortably hard effort as previous tempo runs, just for 6 minutes instead of 8.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "4 × 6 minutes @ 3:55-4:05/km",
+                                            "2-3 minutes easy jog recovery",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~55 minutes total",
+                                        paceCheck: "Each 6-minute interval = ~1.5-1.6K. Total tempo distance: ~6-6.4K."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run + strength work.",
+                                        structure: ["10-12K easy", "15-20 min strength"]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Straight easy run, no fast finish today.",
+                                        why: "Building volume while maintaining freshness.",
+                                        structure: ["12K at 5:20-5:50/km"]
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest or cross-train.",
+                                        structure: ["Rest or 30-40 min cross-train"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        structure: ["8-10K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "22-24K, last 4-5K steady",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Longest long run so far (22-24K) with steady finish.",
+                                        why: "Continues building endurance - you're now approaching your previous 30K effort but with better pacing strategy.",
+                                        structure: [
+                                            "First 17-19K: Easy (5:00-5:30/km)",
+                                            "Final 4-5K: Steady (4:25-4:35/km)",
+                                            "Total: 22-24K, ~2:00-2:15 total time"
+                                        ],
+                                        nutrition: "Practice taking nutrition around 60-75 minutes. Try different gels/chews to see what your stomach tolerates."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 4,
+                            label: "Week 4 - Cutback (Dec 1-7)",
+                            distance: "50-55K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6K easy",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest day.",
+                                        structure: ["Complete rest or very short 6K easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "8 × 2min @ T (1min easy)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "Lighter tempo workout - shorter intervals with less rest. This is a CUTBACK week, so volume and intensity drop.",
+                                        why: "Allows your body to recover and adapt to the last 3 weeks of training. Prevents overtraining and injury.",
+                                        howToFeel: "Same tempo effort but shorter bursts. Should feel controlled and strong, not exhausting.",
+                                        structure: [
+                                            "Warm-up: 2K easy + drills",
+                                            "8 × 2 minutes @ 3:55-4:05/km",
+                                            "1 minute easy jog recovery",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~45 minutes total",
+                                        tips: "This is recovery week - don't try to crush these. Just maintain quality with less volume."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "8-10K easy + light strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run + lighter strength session.",
+                                        structure: ["8-10K easy", "15 min light strength"]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "10K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Easy 10K.",
+                                        structure: ["10K at easy pace"]
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Full rest day.",
+                                        why: "Maximize recovery during cutback week.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run + strides.",
+                                        structure: ["8K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "18-20K easy only",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Shorter long run, all easy pace - NO fast finish today.",
+                                        why: "Recovery long run. Maintains endurance without creating deep fatigue.",
+                                        howToFeel: "Totally relaxed and comfortable throughout.",
+                                        structure: [
+                                            "18-20K all at easy pace (5:00-5:30/km)",
+                                            "No steady section, no tempo, just easy running"
+                                        ],
+                                        tips: "You should finish feeling fresh, like you could have kept going. If you're exhausted, you went too hard. This week is about recovery!"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Phase 2: Marathon-Specific",
+                    desc: "Weeks 5-8 | Introduce MP work, tempo, and intervals",
+                    weeks: [
+                        {
+                            weekNum: 5,
+                            label: "Week 5 (Dec 8-14)",
+                            distance: "60-70K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery day after your long run.",
+                                        why: "Allows your body to adapt to the training stimulus from the weekend.",
+                                        howToFeel: "If you run, it should be completely effortless.",
+                                        structure: [
+                                            "Option A: Complete rest",
+                                            "Option B: 6-8K at 5:30-5:50/km"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "3 × 10min @ Tempo (3min easy)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "Three 10-minute TEMPO intervals. This is longer than previous tempo work - you're building up your threshold endurance.",
+                                        why: "Extending the tempo duration teaches your body to sustain a hard effort for longer. This directly translates to being able to hold marathon pace.",
+                                        howToFeel: "Comfortably hard for 10 minutes. You should be working but not gasping. Each interval should feel similar in effort.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy jogging (5:30-5:50/km)",
+                                            "Dynamic drills: 5 minutes (leg swings, lunges, high knees)",
+                                            "Interval 1: 10 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "Recovery: 3 minutes easy jog",
+                                            "Interval 2: 10 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "Recovery: 3 minutes easy jog",
+                                            "Interval 3: 10 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~60-70 minutes total",
+                                        paceCheck: "In 10 minutes at 3:55-4:05/km, you'll cover about 2.5-2.6K per interval. Total tempo work: ~7.5-7.8K.",
+                                        tips: "Don't start too fast. The third interval should feel similar to the first. If you're dying by interval 3, you went too hard early."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run followed by strength work. You're increasing easy run distance slightly.",
+                                        why: "Building aerobic volume while maintaining injury-prevention strength work.",
+                                        howToFeel: "Easy and relaxed. Should feel recovered from yesterday's tempo.",
+                                        structure: [
+                                            "Run: 10-12K at 5:20-5:50/km",
+                                            "Time: ~55-70 minutes",
+                                            "Strength: 15-20 minutes"
+                                        ],
+                                        strengthWork: [
+                                            "Single-leg deadlifts: 3 sets of 10 each leg",
+                                            "Step-ups: 3 sets of 10 each leg",
+                                            "Hip thrusts: 3 sets of 12",
+                                            "Side planks: 3 × 30 seconds each side",
+                                            "Dead bugs: 3 sets of 10"
+                                        ],
+                                        tips: "Keep strength weight moderate. Focus on control and stability, especially on single-leg exercises."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12-14K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Another easy run, slightly longer distance. Just accumulating aerobic miles.",
+                                        why: "Easy runs are still the foundation. More volume = better aerobic engine = better marathon.",
+                                        howToFeel: "Comfortable and conversational throughout.",
+                                        structure: [
+                                            "12-14K at 5:20-5:50/km",
+                                            "Total time: ~65-80 minutes"
+                                        ],
+                                        tips: "Don't let this drift faster than easy pace. You have a long run in 3 days - save your energy."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30-40min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest day or optional easy cross-training.",
+                                        why: "Freshen up before the weekend's long run.",
+                                        structure: [
+                                            "Option A: Complete rest",
+                                            "Option B: 30-40 min easy cycling",
+                                            "Option C: 30-40 min easy swimming",
+                                            "Option D: Yoga/stretching session"
+                                        ],
+                                        tips: "If cross-training, keep it very easy. You should not be breathing hard."
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + 4-6 strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Short easy run with strides to prepare for tomorrow's long run.",
+                                        why: "Keeps legs fresh while activating fast-twitch fibers. Strides are like 'waking up' your legs before the long run.",
+                                        howToFeel: "Easy run should be relaxed. Strides should feel smooth and controlled-fast.",
+                                        structure: [
+                                            "Run: 8-10K at 5:20-5:50/km",
+                                            "Then 4-6 strides:",
+                                            "  • 100 meters or ~25 seconds each",
+                                            "  • Gradually accelerate to 85-90% effort",
+                                            "  • Focus on form: relaxed shoulders, quick turnover",
+                                            "  • Walk back recovery between each"
+                                        ],
+                                        tips: "Strides should feel good, not exhausting. Think 'fast but smooth' not 'all-out sprint'."
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "24-26K, last 6-8K steady (4:25-4:35/km)",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Longer long run with a 'steady' finish. You're building up distance and introducing faster running when tired.",
+                                        why: "Teaches your body to maintain a solid pace even with fatigue. Prepares you for marathon pacing.",
+                                        howToFeel: "First 16-20K should feel easy and comfortable. Final 6-8K should feel like a moderate push - faster but controlled.",
+                                        structure: [
+                                            "First 16-20K: Easy pace (5:00-5:30/km)",
+                                            "Final 6-8K: Steady pace (4:25-4:35/km)",
+                                            "Total: 24-26K",
+                                            "Total time: ~2:10-2:30 hours"
+                                        ],
+                                        nutrition: "Definitely take nutrition on this run. Practice your race-day fueling: gel or chews every 45-60 minutes. Drink water regularly.",
+                                        tips: "The steady section is NOT marathon pace yet - it's a bit slower. Don't blow up trying to hammer it. This should feel 'comfortably moderate' not 'hard'."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 6,
+                            label: "Week 6 (Dec 15-21)",
+                            distance: "65-72K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery after long run.",
+                                        howToFeel: "If running, very easy and relaxed.",
+                                        structure: [
+                                            "Option A: Rest",
+                                            "Option B: 6-8K easy (5:30-5:50/km)"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "6 × 1K @ Intervals (3:40-3:55/km) 2-2:30 jog",
+                                    type: "Interval Workout",
+                                    explanation: {
+                                        what: "This is your first INTERVAL workout (I). Intervals are shorter, faster efforts designed to improve VO2max - your maximum oxygen uptake. This is speed work.",
+                                        why: "Intervals boost your aerobic power and running economy. They make marathon pace feel easier by improving your cardiovascular system.",
+                                        howToFeel: "These should feel HARD but controlled. Breathing will be heavy. You should be able to finish each 1K rep strong without completely falling apart.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy jogging",
+                                            "Dynamic drills: 5 minutes",
+                                            "6 × 1000 meters @ 3:40-3:55/km pace",
+                                            "Recovery: 2:00-2:30 minutes easy jogging between reps",
+                                            "Cool-down: 2-3K easy jogging"
+                                        ],
+                                        totalTime: "~60 minutes total",
+                                        paceCheck: "At 3:40-3:55/km, each 1K rep should take 3:40-3:55. Total fast running: 6K. Target finish times: 3:40, 3:43, 3:45, 3:48, 3:50, 3:55.",
+                                        tips: "Don't sprint the first rep. Pace them evenly or get slightly faster. The last rep should be hard but doable. This is NOT all-out - you should be able to complete all 6 with good form."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Recovery run after yesterday's hard intervals, plus strength.",
+                                        why: "Easy running promotes recovery by increasing blood flow without creating stress.",
+                                        howToFeel: "Legs might feel a bit tired from yesterday. Keep this very easy.",
+                                        structure: [
+                                            "10-12K at 5:20-5:50/km (err on slower side today)",
+                                            "15-20 min strength"
+                                        ],
+                                        strengthWork: [
+                                            "Bulgarian split squats: 3 sets of 8 each",
+                                            "Single-leg glute bridges: 3 sets of 12 each",
+                                            "Clamshells: 3 sets of 15 each",
+                                            "Front plank: 3 × 45-60 seconds",
+                                            "Monster walks with band: 2 sets of 20 steps"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12K with 4-6K steady (4:25-4:35/km)",
+                                    type: "Steady Run",
+                                    explanation: {
+                                        what: "Easy run with a steady middle section.",
+                                        why: "Keeps you in touch with moderately hard running during the week.",
+                                        howToFeel: "Easy start, then push for 4-6K at steady effort, then back to easy.",
+                                        structure: [
+                                            "First 3-4K: Easy (5:20-5:50/km)",
+                                            "Middle 4-6K: Steady (4:25-4:35/km)",
+                                            "Final 2-3K: Easy (5:20-5:50/km)",
+                                            "Total: 12K"
+                                        ],
+                                        tips: "Steady section should feel like a gentle push, not a race."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30-40min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest or light cross-training.",
+                                        structure: ["Rest or 30-40 min easy bike/swim/yoga"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + 4-6 strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Pre-long-run easy run with strides.",
+                                        structure: [
+                                            "8-10K easy",
+                                            "4-6 × 100m strides at 85-90% effort"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "26-28K with 2×5K @ MP+10-15s (4:25-4:35/km)",
+                                    type: "Long Run with MP Work",
+                                    explanation: {
+                                        what: "This is your first run with MARATHON PACE work (sort of). You'll do two 5K blocks at slightly slower than goal marathon pace.",
+                                        why: "Introduces your body to running at marathon-ish pace when already tired. Tests your pacing and endurance.",
+                                        howToFeel: "Easy sections are comfortable. The 5K blocks at 4:25-4:35/km should feel 'moderately hard but sustainable' - you should think 'I could hold this for longer if I had to'.",
+                                        structure: [
+                                            "First 8-10K: Easy warm-up (5:00-5:30/km)",
+                                            "5K @ 4:25-4:35/km (MP + 10-15 seconds)",
+                                            "2K easy recovery jog",
+                                            "5K @ 4:25-4:35/km (MP + 10-15 seconds)",
+                                            "Remaining distance easy to reach 26-28K total",
+                                            "Total time: ~2:15-2:35 hours"
+                                        ],
+                                        paceCheck: "Each 5K block at 4:25-4:35/km should take about 22-23 minutes. This is 10-15 seconds SLOWER than your goal marathon pace of 4:15-4:20/km.",
+                                        nutrition: "Take gel/chews at 45 min, 90 min. Drink water regularly. This is important practice.",
+                                        tips: "This is NOT full marathon pace yet. It's a bit easier. Don't try to prove anything by going faster. The goal is to practice pacing and learn how your body responds."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 7,
+                            label: "Week 7 - Cutback (Dec 22-28)",
+                            distance: "60-65K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6K easy",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Recovery day.",
+                                        structure: ["Rest or 6K very easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "5 × 1K @ I or 10×400m @ fast",
+                                    type: "Interval Workout",
+                                    explanation: {
+                                        what: "Interval workout, but it's a cutback week so you have two options: either 5 × 1K (one less than last week) OR 10 × 400m at faster pace.",
+                                        why: "Maintains speed and VO2max fitness with reduced volume since this is a recovery week.",
+                                        howToFeel: "Should feel challenging but not crushing. You're in a cutback week so don't overdo it.",
+                                        structure: [
+                                            "Option A: 5 × 1K @ 3:40-3:55/km with 2-2:30 min recovery",
+                                            "Option B: 10 × 400m @ 3:30-3:40/km with 90 sec jog recovery",
+                                            "Warm-up: 2-3K easy + drills",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~50-55 minutes total",
+                                        tips: "Pick the option that feels better for you. If you're tired, do the 1K option. If you're feeling good and want variety, try the 400m repeats."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10K easy + light strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run plus lighter strength work (this is cutback week).",
+                                        structure: [
+                                            "10K at 5:20-5:50/km",
+                                            "15 min light strength work"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12K with 3-4K @ MP (4:15-4:20/km)",
+                                    type: "Marathon Pace Run",
+                                    explanation: {
+                                        what: "This is your first run at ACTUAL MARATHON PACE (MP) - 4:15-4:20/km. This is your goal race pace for sub-3 hours.",
+                                        why: "Introduces your neuromuscular system to marathon pace. Teaches you what this pace should feel like.",
+                                        howToFeel: "The MP section should feel 'comfortably firm' - not easy, not hard, but sustainable. You should think 'yes, I could hold this for 42K'.",
+                                        structure: [
+                                            "First 4-5K: Easy warm-up (5:20-5:50/km)",
+                                            "3-4K @ MARATHON PACE (4:15-4:20/km)",
+                                            "Final 3-4K: Easy cool-down",
+                                            "Total: 12K"
+                                        ],
+                                        paceCheck: "At 4:15-4:20/km, your 3-4K MP block should take 12:45-17:20 total. Per km splits should be 4:15, 4:16, 4:17, etc.",
+                                        tips: "This pace should feel sustainable, not like you're racing. If you're gasping or struggling, you're going too fast. Marathon pace should feel 'I could hold this for hours'."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Full rest day.",
+                                        why: "Cutback week - maximize recovery.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides before long run.",
+                                        structure: ["8-10K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "22-24K easy",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Shorter long run this week, all at easy pace. No fast sections.",
+                                        why: "This is a cutback week - maintaining endurance without creating fatigue.",
+                                        howToFeel: "Relaxed and comfortable throughout. Should finish feeling fresh.",
+                                        structure: [
+                                            "22-24K all at easy pace (5:00-5:30/km)",
+                                            "Total time: ~2:00-2:15 hours"
+                                        ],
+                                        tips: "Don't be tempted to go faster. Cutback weeks are crucial for adaptation and injury prevention."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 8,
+                            label: "Week 8 - First Big MP Run (Dec 29 - Jan 4)",
+                            distance: "70-75K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery day.",
+                                        structure: ["Rest or 6-8K easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "Tempo ladder: 10+8+6min @ T (3min easy)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "A TEMPO LADDER - descending intervals. You do 10 minutes, then 8 minutes, then 6 minutes, all at tempo pace.",
+                                        why: "Builds threshold fitness with varied durations. The descending format is psychologically easier.",
+                                        howToFeel: "Each interval at comfortably hard effort. The shorter intervals shouldn't feel easier - same effort, just less time.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "10 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "3 minutes easy jog",
+                                            "8 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "3 minutes easy jog",
+                                            "6 minutes @ 3:55-4:05/km (TEMPO)",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~60-65 minutes total",
+                                        paceCheck: "Total tempo work: ~6K (2.5K + 2K + 1.5K).",
+                                        tips: "Don't go too hard on the 10-minute interval thinking you have recovery coming. Pace them all at same effort level."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run plus strength work.",
+                                        structure: [
+                                            "10-12K easy",
+                                            "15-20 min strength"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "14K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Straight easy run, building up your weekly volume.",
+                                        why: "More aerobic base building.",
+                                        structure: [
+                                            "14K at 5:20-5:50/km",
+                                            "~75-90 minutes"
+                                        ],
+                                        tips: "Save energy for Sunday's big MP long run."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30-40min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest or light cross-training.",
+                                        structure: ["Rest or 30-40 min easy activity"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        why: "Preparing for tomorrow's important long run.",
+                                        structure: ["8-10K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "28-30K: 10-12K easy, 10-12K @ MP (4:15-4:20/km), 6-8K easy",
+                                    type: "Long Run - First Big MP Block",
+                                    explanation: {
+                                        what: "This is a KEY WORKOUT. You'll run 10-12 kilometers at MARATHON PACE during your long run. This is the longest you've held marathon pace.",
+                                        why: "This workout validates your marathon pace and builds confidence that you can sustain 4:15-4:20/km for extended periods.",
+                                        howToFeel: "Easy sections are relaxed. The 10-12K MP block should feel sustainable - 'comfortably firm'. Not easy, but not crushing either.",
+                                        structure: [
+                                            "First 10-12K: Easy warm-up (5:00-5:30/km)",
+                                            "Middle 10-12K: MARATHON PACE (4:15-4:20/km) - THIS IS THE KEY SECTION",
+                                            "Final 6-8K: Easy cool-down (5:00-5:30/km)",
+                                            "Total: 28-30K",
+                                            "Total time: ~2:15-2:30 hours"
+                                        ],
+                                        paceCheck: "The 10-12K MP block at 4:15-4:20/km should take 42:30-52:00. Every kilometer should be 4:15-4:20. Watch your watch!",
+                                        nutrition: "Take gel/chews at 45 min, 90 min, 2 hours. Drink regularly. Practice your race-day nutrition strategy.",
+                                        tips: "This is a big workout. Don't start the MP section too fast. First 2-3K at MP should feel 'is this too easy?' - that's good! The last 2-3K will feel harder. If you can't complete the full MP block, that's OK - just do what you can and note how it felt. This is a learning experience."
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Phase 3: Peak",
+                    desc: "Weeks 9-12 | Highest volume, longest runs, sharpen MP fitness",
+                    weeks: [
+                        {
+                            weekNum: 9,
+                            label: "Week 9 (Jan 5-11)",
+                            distance: "70-78K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery after last week's big MP long run.",
+                                        howToFeel: "If running, keep it very easy.",
+                                        structure: ["Rest or 6-8K at 5:30-5:50/km"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "6-7 × 1K @ I (3:40-3:55/km)",
+                                    type: "Interval Workout",
+                                    explanation: {
+                                        what: "Interval workout - 6 or 7 × 1K depending on how you feel. This is speed work to maintain your VO2max.",
+                                        why: "Keeps your aerobic power sharp while you're doing bigger volume and MP work.",
+                                        howToFeel: "Hard but controlled. Each rep should feel challenging but manageable.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "6-7 × 1000m @ 3:40-3:55/km",
+                                            "Recovery: 2:00-2:30 easy jog between reps",
+                                            "Cool-down: 2-3K easy"
+                                        ],
+                                        totalTime: "~60-65 minutes",
+                                        paceCheck: "Each 1K in 3:40-3:55. Aim for consistent splits across all reps.",
+                                        tips: "If you're feeling good after 6 reps, do a 7th. If 6 felt really hard, stop there. Listen to your body."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Recovery easy run after intervals, plus strength.",
+                                        structure: [
+                                            "10-12K at 5:20-5:50/km",
+                                            "15-20 min strength"
+                                        ],
+                                        strengthWork: [
+                                            "Single-leg deadlifts: 3 × 10 each",
+                                            "Walking lunges: 3 × 12 each leg",
+                                            "Glute bridges: 3 × 15",
+                                            "Plank variations: 3 × 45 sec",
+                                            "Clamshells: 3 × 15 each"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "14-16K with 6-8K @ MP (4:15-4:20/km)",
+                                    type: "Marathon Pace Run",
+                                    explanation: {
+                                        what: "Mid-week MP run - extending your MP work to 6-8K.",
+                                        why: "Gets you comfortable holding marathon pace multiple times per week. Builds MP-specific endurance.",
+                                        howToFeel: "The MP section should feel like 'comfortably firm work' - sustainable but not easy.",
+                                        structure: [
+                                            "First 4-5K: Easy warm-up",
+                                            "6-8K @ MARATHON PACE (4:15-4:20/km)",
+                                            "Final 3-4K: Easy cool-down",
+                                            "Total: 14-16K"
+                                        ],
+                                        paceCheck: "6-8K at MP takes 25:30-34:40. Every kilometer 4:15-4:20.",
+                                        tips: "This comes after intervals yesterday, so you might feel a bit tired. That's OK - the goal is practicing MP when not 100% fresh."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or 6-8K very easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Rest or very short easy run.",
+                                        why: "Recovery before weekend.",
+                                        structure: ["Rest or 6-8K at very easy pace"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Pre-long-run shakeout with strides.",
+                                        structure: ["8-10K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "28-30K, last 8-10K @ MP+10-15s (4:25-4:35/km)",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Long run with an extended steady/MP-ish finish.",
+                                        why: "Building confidence running faster for longer when tired.",
+                                        howToFeel: "Most of run is easy. Final 8-10K at slightly slower than MP should feel like a solid push but sustainable.",
+                                        structure: [
+                                            "First 18-20K: Easy (5:00-5:30/km)",
+                                            "Final 8-10K: MP+10-15s (4:25-4:35/km)",
+                                            "Total: 28-30K"
+                                        ],
+                                        nutrition: "Fuel every 45-60 min. Hydrate regularly.",
+                                        tips: "The faster section is still a bit slower than race pace. Don't crush it - you have bigger workouts ahead."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 10,
+                            label: "Week 10 - Peak Long Run #1 (Jan 12-18)",
+                            distance: "75-82K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery day.",
+                                        structure: ["Rest or 6-8K easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "4 × 8min @ T (3min easy)",
+                                    type: "Tempo Workout",
+                                    explanation: {
+                                        what: "Four 8-minute tempo intervals. You've done this type of workout before.",
+                                        why: "Maintains threshold fitness while you're in peak training phase.",
+                                        howToFeel: "Comfortably hard. Should be challenging but sustainable.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "4 × 8 minutes @ 3:55-4:05/km",
+                                            "3 minutes easy jog between",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~60-70 minutes",
+                                        paceCheck: "Total tempo: ~6.5-7K."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run plus strength.",
+                                        structure: ["10-12K easy", "15-20 min strength"]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "14K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Straight easy run.",
+                                        why: "Volume day, but keeping it easy to prepare for Sunday's peak long run.",
+                                        structure: ["14K at 5:20-5:50/km"],
+                                        tips: "Don't go hard. Sunday is a big day - this is just easy mileage."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30-40min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest or very light cross-training.",
+                                        structure: ["Rest or 30-40 min easy bike/swim"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        why: "Final prep for tomorrow's biggest long run yet.",
+                                        structure: ["8-10K easy + 4-6 strides"],
+                                        tips: "Keep this relaxed. Save all your energy for tomorrow."
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "30-32K: 8-10K easy, 3×5K @ MP (4:15-4:20/km) w/ 1-2K easy between, cool-down",
+                                    type: "Long Run - PEAK WORKOUT #1",
+                                    explanation: {
+                                        what: "This is one of your TWO peak long runs. You'll do THREE separate 5K blocks at MARATHON PACE with recovery between each. This is a HUGE confidence builder.",
+                                        why: "This workout proves you can hit marathon pace multiple times even when tired. It simulates the marathon experience more than any other workout.",
+                                        howToFeel: "First 5K at MP should feel controlled and sustainable. Second 5K a bit harder. Third 5K will be tough but you should be able to finish strong.",
+                                        structure: [
+                                            "First 8-10K: Easy warm-up (5:00-5:30/km)",
+                                            "5K @ MARATHON PACE (4:15-4:20/km) - block 1",
+                                            "1-2K easy recovery jog",
+                                            "5K @ MARATHON PACE (4:15-4:20/km) - block 2",
+                                            "1-2K easy recovery jog",
+                                            "5K @ MARATHON PACE (4:15-4:20/km) - block 3",
+                                            "Remaining distance easy cool-down to reach 30-32K",
+                                            "Total time: ~2:20-2:45 hours"
+                                        ],
+                                        paceCheck: "Each 5K at 4:15-4:20/km takes 21:15-21:40. Total MP running: 15K (64:00-65:00 total for all three blocks). This is MORE than half-marathon distance at marathon pace!",
+                                        nutrition: "Critical workout for nutrition practice. Take gel at 45min, 90min, and 2hr mark. Drink every 15-20 minutes.",
+                                        tips: "This is THE workout that will make or break your sub-3 goal. If you can complete all three 5K blocks at 4:15-4:20/km, you're ready for sub-3. Don't start too fast on block 1. Be patient. The third block will be hard, but it should still feel controlled. If you blow up on block 3, that's data - you went too hard earlier or need to adjust your race pace."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 11,
+                            label: "Week 11 - Cutback & Sharpen (Jan 19-25)",
+                            distance: "65-72K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery from peak long run.",
+                                        howToFeel: "You might be sore from yesterday. Rest or very easy running only.",
+                                        structure: ["Rest or 6-8K very easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "8 × 800m @ fast (close to 5K effort) 2min jog",
+                                    type: "Interval Workout",
+                                    explanation: {
+                                        what: "Shorter intervals at fast pace - 800m repeats. This is SHARPENING work.",
+                                        why: "After peak long run, we're switching to faster, shorter intervals to sharpen your speed. Makes marathon pace feel easier.",
+                                        howToFeel: "These are FAST. Faster than your 1K intervals. Should feel hard but smooth.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "8 × 800m @ 3:30-3:45/km (close to 5K race effort)",
+                                            "Recovery: 2 minutes easy jog",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~55-60 minutes",
+                                        paceCheck: "Each 800m should take 2:48-3:00. Total fast running: 6.4K.",
+                                        tips: "Don't sprint these. They're fast but controlled. Focus on quick turnover and relaxed form."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10K easy + light strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run, lighter strength (cutback week).",
+                                        structure: ["10K easy", "15 min light strength"]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12-14K with 5-6K @ MP (4:15-4:20/km)",
+                                    type: "Marathon Pace Run",
+                                    explanation: {
+                                        what: "Mid-week MP touch - keeping you connected to race pace.",
+                                        howToFeel: "MP should feel very familiar now. Comfortably firm.",
+                                        structure: [
+                                            "Warm-up 4-5K easy",
+                                            "5-6K @ MP (4:15-4:20/km)",
+                                            "Cool-down 3-4K easy"
+                                        ],
+                                        paceCheck: "5-6K at MP: 21:15-26:00.",
+                                        tips: "This is cutback week - don't overdo it. Just stay in touch with MP."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest day.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        structure: ["8-10K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "24-26K easy (no MP block)",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Shorter cutback long run, all easy pace. NO marathon pace work today.",
+                                        why: "This is a recovery long run after last week's peak workout. Maintaining endurance without deep fatigue.",
+                                        howToFeel: "Relaxed and comfortable. Should finish feeling good.",
+                                        structure: [
+                                            "24-26K all easy (5:00-5:30/km)",
+                                            "Total time: ~2:10-2:30"
+                                        ],
+                                        tips: "Don't be tempted to push pace. Cutback weeks allow your body to absorb training and get stronger."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 12,
+                            label: "Week 12 - Peak Long Run #2 (Jan 26 - Feb 1)",
+                            distance: "75-80K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery day.",
+                                        structure: ["Rest or 6-8K easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "5 × 1K @ I + 10×100m strides",
+                                    type: "Interval + Strides",
+                                    explanation: {
+                                        what: "Interval workout followed by short strides. Maintaining speed.",
+                                        structure: [
+                                            "Warm-up: 2-3K easy + drills",
+                                            "5 × 1K @ 3:40-3:55/km (2-2:30 recovery)",
+                                            "Short rest",
+                                            "10 × 100m relaxed-fast strides (walk back recovery)",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        tips: "Keep 1K reps controlled. Strides should feel smooth, not sprinting."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10-12K easy + strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run plus strength.",
+                                        structure: ["10-12K easy", "15-20 min strength"]
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "14-16K easy, last 4-5K steady (4:25-4:35/km)",
+                                    type: "Progression Run",
+                                    explanation: {
+                                        what: "Easy run with steady finish (slightly slower than MP).",
+                                        why: "Staying in touch with faster running without overdoing it before Sunday.",
+                                        structure: [
+                                            "First 10-11K: Easy",
+                                            "Final 4-5K: Steady (4:25-4:35/km)"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or cross-train 30-40min",
+                                    type: "Rest/Cross-training",
+                                    explanation: {
+                                        what: "Rest or light cross-training.",
+                                        structure: ["Rest or easy cross-train"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8-10K easy + strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        why: "Final prep for your LAST big long run.",
+                                        structure: ["8-10K easy + 4-6 strides"],
+                                        tips: "Rest well tonight. Tomorrow is your final peak long run."
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "30-32K: 12-14K easy, 12-14K @ MP (4:15-4:20/km), remaining easy",
+                                    type: "Long Run - PEAK WORKOUT #2 (FINAL BIG ONE)",
+                                    explanation: {
+                                        what: "This is your FINAL peak long run and arguably the most important workout of your entire training plan. You'll hold marathon pace for 12-14 CONTINUOUS kilometers. This is the dress rehearsal for your race.",
+                                        why: "This is the ultimate confidence builder. If you can hold MP for 12-14K during a 30-32K run, you can absolutely hold it for 42K on race day.",
+                                        howToFeel: "The MP section should feel sustainable - 'comfortably firm'. Not easy, but you should think 'yes, I can hold this for the full marathon'.",
+                                        structure: [
+                                            "First 12-14K: Easy warm-up (5:00-5:30/km)",
+                                            "Middle 12-14K: CONTINUOUS MARATHON PACE (4:15-4:20/km) - THIS IS IT",
+                                            "Remaining 6-8K: Easy cool-down",
+                                            "Total: 30-32K",
+                                            "Total time: ~2:20-2:45 hours"
+                                        ],
+                                        paceCheck: "The 12-14K MP block at 4:15-4:20/km should take 51:00-60:40. Every single kilometer should be 4:15-4:20. This is THIRTY PERCENT of your marathon at race pace.",
+                                        nutrition: "Critical practice. Fuel at 45min, 90min, 2hr. Use the EXACT gels/chews you'll use on race day. Drink every 15-20 min.",
+                                        tips: "This is THE workout. The first few K at MP will feel easy - DON'T go faster. Around K8-10 it will start feeling harder - this is normal. The last 2-3K will be tough but you should finish strong. If you complete this workout successfully, you WILL go sub-3. Take detailed notes on how you felt, what worked for nutrition, pacing, etc. This is your race day blueprint."
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: "Phase 4: Taper & Race",
+                    desc: "Weeks 13-16 | Reduce volume, maintain sharpness, race!",
+                    weeks: [
+                        {
+                            weekNum: 13,
+                            label: "Week 13 - Begin Taper (Feb 2-8)",
+                            distance: "60-65K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6-8K easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Recovery from your final peak long run. The TAPER has begun - you're done with big workouts!",
+                                        why: "Your body needs to recover from 12 weeks of hard training. The taper allows you to arrive at the start line fresh and strong.",
+                                        howToFeel: "You might feel a bit flat or tired. This is normal. Trust the taper.",
+                                        structure: [
+                                            "Option A: Complete rest",
+                                            "Option B: 6-8K at 5:30-5:50/km (very easy)"
+                                        ],
+                                        tips: "Resist the urge to do more. The hard work is done. Now you're just maintaining fitness while recovering."
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "5 × 1K @ I (3:40-3:55/km) OR 3 × 8min @ T",
+                                    type: "Sharpening Workout",
+                                    explanation: {
+                                        what: "One final quality workout, but shorter than before. Choose either intervals or tempo based on how you feel.",
+                                        why: "Maintains your speed and fitness without creating fatigue. Keeps your legs feeling sharp.",
+                                        howToFeel: "Should feel controlled and strong, not exhausting. If you're tired, do the tempo option instead of intervals.",
+                                        structure: [
+                                            "Option A (if feeling good): 5 × 1K @ 3:40-3:55/km with 2-2:30 recovery",
+                                            "Option B (if tired): 3 × 8 minutes @ 3:55-4:05/km with 3 min recovery",
+                                            "Warm-up: 2-3K easy + drills",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~55-60 minutes",
+                                        tips: "This is your last hard workout before the marathon. It should feel good, not crushing. If in doubt, err on the side of doing less."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "10K easy + light strength",
+                                    type: "Easy + Strength",
+                                    explanation: {
+                                        what: "Easy run plus light strength work. Volume is reduced significantly.",
+                                        why: "Maintaining mobility and activation without creating fatigue.",
+                                        structure: [
+                                            "10K at 5:20-5:50/km",
+                                            "15 min light strength (bodyweight focus)"
+                                        ],
+                                        strengthWork: [
+                                            "Bodyweight squats: 2 × 15",
+                                            "Single-leg glute bridges: 2 × 10 each",
+                                            "Planks: 2 × 30-40 seconds",
+                                            "Clamshells: 2 × 12 each",
+                                            "Light hip activation work"
+                                        ],
+                                        tips: "Keep strength work light. No heavy weights, no soreness."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "12K with 4-5K @ MP (4:15-4:20/km)",
+                                    type: "Marathon Pace Touch",
+                                    explanation: {
+                                        what: "Short MP run to keep you in touch with race pace. This is the last time you'll hit MP before the race.",
+                                        why: "Reminds your body what marathon pace feels like without creating fatigue.",
+                                        howToFeel: "MP should feel comfortable and familiar. Like putting on an old pair of shoes.",
+                                        structure: [
+                                            "First 4K: Easy warm-up",
+                                            "4-5K @ MARATHON PACE (4:15-4:20/km)",
+                                            "Final 3-4K: Easy cool-down",
+                                            "Total: 12K"
+                                        ],
+                                        paceCheck: "4-5K at MP: 17:00-21:40. Should feel smooth and sustainable.",
+                                        tips: "This is just a reminder run. Don't try to prove anything. Just practice feeling relaxed at MP."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Full rest day.",
+                                        why: "More rest = more recovery = fresher legs.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8K easy + 4-6 strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Short easy run with strides.",
+                                        why: "Keeps legs feeling fresh and fast.",
+                                        structure: [
+                                            "8K easy",
+                                            "4-6 × 100m strides (smooth and relaxed)"
+                                        ]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "20-22K easy (no fast sections)",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Final 'long run' but it's much shorter than recent weeks. All easy pace.",
+                                        why: "Maintains endurance without creating deep fatigue. You're tapering, not training hard.",
+                                        howToFeel: "Relaxed and comfortable. Should finish feeling fresh, not tired.",
+                                        structure: [
+                                            "20-22K all at easy pace (5:00-5:30/km)",
+                                            "NO fast sections, NO MP work",
+                                            "Total time: ~1:50-2:05"
+                                        ],
+                                        tips: "Don't be tempted to go faster or add MP sections. Trust the taper process."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 14,
+                            label: "Week 14 - Deeper Taper (Feb 9-15)",
+                            distance: "50-55K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 6K easy",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest day. Volume continues dropping.",
+                                        structure: ["Rest or 6K very easy"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "8 × 400m @ fast (3:25-3:35/km) OR 4 × 1K @ I",
+                                    type: "Sharpening Workout",
+                                    explanation: {
+                                        what: "Final sharpening work - short and fast OR medium intervals. This is the LAST speed workout before race day.",
+                                        why: "Keeps your legs feeling fast and sharp. Makes marathon pace feel easy.",
+                                        howToFeel: "Should feel good - fast but controlled. Not exhausting.",
+                                        structure: [
+                                            "Option A: 8 × 400m @ 3:25-3:35/km with 90 sec jog recovery",
+                                            "Option B: 4 × 1K @ 3:40-3:55/km with 2 min recovery",
+                                            "Warm-up: 2-3K easy + drills",
+                                            "Cool-down: 2K easy"
+                                        ],
+                                        totalTime: "~45-50 minutes",
+                                        paceCheck: "Option A: Each 400m in 1:22-1:26. Option B: Each 1K in 3:40-3:55.",
+                                        tips: "Pick whichever feels better. If legs are tired, do the 1K option. This should feel sharp, not crushing."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "8K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Short easy run. Notice how much shorter your runs are now.",
+                                        why: "Light aerobic stimulus, mostly just moving the legs.",
+                                        structure: ["8K at 5:20-5:50/km", "~45-50 minutes"],
+                                        tips: "Keep it very easy. You might feel sluggish - this is normal during taper."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "10K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Another easy 10K.",
+                                        structure: ["10K easy pace"],
+                                        tips: "Just ticking over. Don't overthink it."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest day.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "8K easy + 4-6 strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides.",
+                                        structure: ["8K easy + 4-6 strides"]
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "16-18K easy",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Shorter 'long run' - continuing to taper.",
+                                        why: "Maintaining endurance without fatigue.",
+                                        howToFeel: "Easy and comfortable.",
+                                        structure: [
+                                            "16-18K at easy pace (5:00-5:30/km)",
+                                            "Total time: ~1:30-1:45"
+                                        ],
+                                        tips: "Two weeks to race day. Trust the taper. You should be feeling fresher."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 15,
+                            label: "Week 15 - Race Simulation (Feb 16-22)",
+                            distance: "40-45K",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Full rest. One week to race day!",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "8K easy with 6 × 100m strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Easy run with strides to keep legs feeling sharp.",
+                                        why: "Light speed work without creating fatigue. Keeps neuromuscular system primed.",
+                                        structure: [
+                                            "8K easy",
+                                            "6 × 100m strides at smooth-fast pace"
+                                        ],
+                                        tips: "Strides should feel effortless and springy. If legs feel dead, that's normal taper feeling."
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "6-8K easy",
+                                    type: "Easy Run",
+                                    explanation: {
+                                        what: "Very short easy run.",
+                                        structure: ["6-8K easy", "~35-45 minutes"],
+                                        tips: "Almost nothing now. Just keeping blood flowing."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "8K easy + 4 × 1K @ MP (4:15-4:20/km) - DRESS REHEARSAL",
+                                    type: "Race Simulation",
+                                    explanation: {
+                                        what: "Final race simulation. You'll do 4 × 1K at marathon pace to practice race-day rhythm and pacing.",
+                                        why: "One last reminder of what race pace feels like. Tests your race-day routine and gear.",
+                                        howToFeel: "MP should feel smooth and controlled. You should finish thinking 'I could do this 42 times'.",
+                                        structure: [
+                                            "Warm-up: 2K easy",
+                                            "4 × 1000m @ 4:15-4:20/km with 2 min jog recovery",
+                                            "Cool-down: 2K easy",
+                                            "Total: 8K"
+                                        ],
+                                        paceCheck: "Each 1K should be 4:15-4:20. Total MP running: 4K.",
+                                        tips: "Wear your race-day shoes, socks, shorts, shirt. Practice your pre-race warm-up routine. Use the exact same gel/chews you'll use on race day. This is a full dress rehearsal."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Rest day.",
+                                        structure: ["Complete rest"]
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "6K easy + 4 strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Very short easy run with a few strides.",
+                                        why: "Keeping legs loose before race week.",
+                                        structure: ["6K easy + 4 strides"],
+                                        tips: "Last real run before race week. Keep it relaxed."
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "12-14K easy",
+                                    type: "Long Run",
+                                    explanation: {
+                                        what: "Final 'long run' - very short now.",
+                                        why: "One last aerobic maintenance run. Next weekend you race!",
+                                        howToFeel: "Easy and comfortable. Legs should feel fresh.",
+                                        structure: [
+                                            "12-14K at easy pace (5:00-5:30/km)",
+                                            "Total time: ~1:05-1:20"
+                                        ],
+                                        tips: "This is it - last long-ish run before the marathon. You should feel ready and excited."
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            weekNum: 16,
+                            label: "Week 16 - RACE WEEK! (Feb 23-27)",
+                            distance: "25-35K + RACE",
+                            days: [
+                                {
+                                    day: "Mon",
+                                    summary: "Rest or 20-30min VERY easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "RACE WEEK! Minimal running, maximum recovery.",
+                                        why: "Your fitness is locked in. Nothing you do this week will make you fitter. Focus on staying loose and rested.",
+                                        structure: [
+                                            "Option A: Complete rest",
+                                            "Option B: 20-30 min very easy jog (4-5K at 5:40-6:00/km)"
+                                        ],
+                                        tips: "Start hydrating well. Begin eating clean, familiar foods. Get organized with race logistics."
+                                    }
+                                },
+                                {
+                                    day: "Tue",
+                                    summary: "6K easy + 4-5 × 100m strides",
+                                    type: "Easy + Strides",
+                                    explanation: {
+                                        what: "Short easy run with a few strides. Last bit of speed work.",
+                                        why: "Keeps legs feeling sharp without creating any fatigue.",
+                                        structure: [
+                                            "6K very easy",
+                                            "4-5 × 100m smooth strides"
+                                        ],
+                                        tips: "This should feel effortless. Don't do anything hard. Race is in 5 days!"
+                                    }
+                                },
+                                {
+                                    day: "Wed",
+                                    summary: "Rest or 20-30min very easy",
+                                    type: "Rest/Easy",
+                                    explanation: {
+                                        what: "Mostly rest.",
+                                        structure: ["Rest or 4-5K very easy if you feel antsy"],
+                                        tips: "Continue hydrating. Check weather forecast for race day. Lay out all your gear."
+                                    }
+                                },
+                                {
+                                    day: "Thu",
+                                    summary: "6K easy with 3 × 1K @ MP (4:15-4:20/km) - FINAL SHARPENER",
+                                    type: "Final Sharpener",
+                                    explanation: {
+                                        what: "Your FINAL workout - three 1K reps at marathon pace to activate your legs one last time.",
+                                        why: "Reminds your body of race pace one last time. Gets your legs feeling 'alive' before race day.",
+                                        howToFeel: "Should feel smooth, controlled, and easy. Like you could do 42 more.",
+                                        structure: [
+                                            "Warm-up: 1.5K easy jog",
+                                            "3 × 1000m @ 4:15-4:20/km with 2 min easy jog",
+                                            "Cool-down: 1.5K easy",
+                                            "Total: ~6K"
+                                        ],
+                                        paceCheck: "Each 1K: 4:15-4:20. Total MP running: 3K.",
+                                        tips: "This is your final confidence booster. MP should feel smooth and sustainable. After this, NO MORE hard running until race day. Pick up race packet if you haven't already."
+                                    }
+                                },
+                                {
+                                    day: "Fri",
+                                    summary: "Rest or 15-20min shuffle",
+                                    type: "Rest",
+                                    explanation: {
+                                        what: "Basically rest. Maybe a very short jog if you're feeling tight.",
+                                        structure: [
+                                            "Option A: Complete rest (recommended)",
+                                            "Option B: 15-20 min very easy shuffle (3-4K)"
+                                        ],
+                                        tips: "TWO DAYS TO RACE. Hydrate, eat clean, sleep well. Stay off your feet as much as possible. Avoid trying new foods."
+                                    }
+                                },
+                                {
+                                    day: "Sat",
+                                    summary: "Rest or 15min easy + 3-4 strides - THE DAY BEFORE",
+                                    type: "Shakeout",
+                                    explanation: {
+                                        what: "Race eve. Either full rest or a very short shakeout run with a few strides.",
+                                        why: "Optional light movement to keep legs from feeling stiff. Many runners prefer full rest.",
+                                        structure: [
+                                            "Option A: Complete rest",
+                                            "Option B: 10-15 min easy jog (2-3K) + 3-4 × 100m strides"
+                                        ],
+                                        tips: "RACE TOMORROW! Final race prep: Lay out all gear (shoes, socks, shorts, shirt, bib, pins, watch, gels, hat). Check weather. Plan breakfast. Set multiple alarms. Hydrate but don't overdo it. Eat a normal dinner (familiar foods, nothing heavy). Get to bed early but don't stress if you can't sleep (race day adrenaline will carry you). Review your race plan: Start easy (4:20-4:25/km for first 5K), settle into 4:15-4:20/km by 10K, hold steady through halfway, stay strong through 30K, push through 35-40K, finish strong. YOU ARE READY!"
+                                    }
+                                },
+                                {
+                                    day: "Sun",
+                                    summary: "RACE DAY - MARATHON!!! 🏃💨",
+                                    type: "MARATHON",
+                                    explanation: {
+                                        what: "MARATHON DAY! 42.195 kilometers. This is what you've trained 16 weeks for. Time to execute.",
+                                        why: "Because you've done the work. Because you're ready. Because you can run sub-3 hours.",
+                                        howToFeel: "Excited, nervous, confident. All normal. Trust your training.",
+                                        structure: [
+                                            "Wake up 3-4 hours before race start",
+                                            "Eat familiar breakfast (what you practiced on long runs)",
+                                            "Arrive at start area 60-90 min early",
+                                            "Light warm-up: 10-15 min easy jog + dynamic stretches + 3-4 × 100m strides",
+                                            "Last bathroom break, check gear, get to start corral",
+                                            "THE RACE:",
+                                            "  • KM 0-5: START CONTROLLED (4:20-4:25/km) - It will feel TOO EASY. That's perfect.",
+                                            "  • KM 5-10: Settle in (4:15-4:20/km) - Find your rhythm",
+                                            "  • KM 10-21 (Halfway): Hold steady (4:15-4:20/km) - You should pass halfway ~1:29:30",
+                                            "  • KM 21-30: STAY STRONG (4:15-4:20/km) - This is where marathon starts. Focus!",
+                                            "  • KM 30-35: DIG DEEP (4:15-4:20/km) - Hardest part. Stay mentally tough.",
+                                            "  • KM 35-40: PUSH THROUGH (4:12-4:18/km) - You trained for this!",
+                                            "  • KM 40-42.2: FINISH STRONG! (whatever you have left) - GO GET IT!",
+                                            "Target finish: 2:59:00 or faster"
+                                        ],
+                                        paceCheck: "Target splits: 5K @ 21:20, 10K @ 42:40, 15K @ 1:04:00, 20K @ 1:25:20, HALF @ 1:29:30, 25K @ 1:46:40, 30K @ 2:08:00, 35K @ 2:29:20, 40K @ 2:50:40, FINISH @ 2:59:00 (or faster!)",
+                                        nutrition: "Gel at KM 8, 16, 24, 32. Water every aid station (small sips). Sports drink if stomach OK. Don't try anything new!",
+                                        tips: "DON'T GO OUT TOO FAST - this is the #1 mistake. Trust your training - you did the work. When it gets hard (and it will around 30K), remember Week 12 when you ran 14K at this pace. You can do this. Break it into chunks: get to 10K, then halfway, then 30K, then it's just a 12K run. Stay present. Don't think about the full distance. Focus on the next kilometer. YOU'VE GOT THIS! Sub-3 is yours for the taking. BELIEVE. EXECUTE. ACHIEVE. 🏃💨🎉"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // Render calendar
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            const contentHTML = trainingPlan.phases.map(phase => {
+                const weeksHTML = phase.weeks.map(week => {
+                    const daysHTML = week.days.map(day => {
+                        let explanationHTML = '';
+                        if (day.explanation) {
+                            explanationHTML = `
+                                <div class="day-explanation">
+                                    ${day.explanation.what ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">What is this?</div>
+                                            <div class="explanation-text">${day.explanation.what}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.why ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Why?</div>
+                                            <div class="explanation-text">${day.explanation.why}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.howToFeel ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">How should it feel?</div>
+                                            <div class="explanation-text">${day.explanation.howToFeel}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.structure ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Exact Structure</div>
+                                            <div class="workout-structure">
+                                                ${day.explanation.structure.map(step => `<div class="step">${step}</div>`).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.strengthWork ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Strength Exercises</div>
+                                            <div class="workout-structure">
+                                                ${day.explanation.strengthWork.map(ex => `<div class="step">• ${ex}</div>`).join('')}
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.totalTime ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Total Time</div>
+                                            <div class="explanation-text">${day.explanation.totalTime}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.paceCheck ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Pace Check</div>
+                                            <div class="explanation-text">${day.explanation.paceCheck}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.tips ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Tips</div>
+                                            <div class="explanation-text">${day.explanation.tips}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.mobility ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Mobility Work</div>
+                                            <div class="explanation-text">${day.explanation.mobility}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${day.explanation.nutrition ? `
+                                        <div class="explanation-section">
+                                            <div class="explanation-title">Nutrition</div>
+                                            <div class="explanation-text">${day.explanation.nutrition}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }
+
+                        return `
+                            <div class="day" data-day="${day.day}">
+                                <div class="day-header">
+                                    <span class="expand-icon">▶</span>
+                                    <span class="day-name">${day.day}:</span>
+                                    <div class="day-content">
+                                        <strong>${day.summary}</strong>
+                                        ${explanationHTML}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="week ${week.weekNum === 1 ? 'current' : ''}" data-week="${week.weekNum}">
+                            <div class="week-header">
+                                <span class="week-number">${week.label}</span>
+                                <span class="week-distance">${week.distance}</span>
+                            </div>
+                            <div class="week-details">
+                                ${daysHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="phase">
+                        <div class="phase-header">
+                            <h3>${phase.name}</h3>
+                            <div class="phase-desc">${phase.desc}</div>
+                        </div>
+                        <div class="weeks">
+                            ${weeksHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            calendar.innerHTML += contentHTML;
+
+            // Add click handlers for days
+            document.querySelectorAll('.day').forEach(day => {
+                day.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('expanded');
+                });
+            });
+
+        }
+
+        // Dashboard updates - REAL-TIME based on actual dates
+        const totalWeeks = 16;
+        const planStartDate = new Date('2025-11-10'); // Week 1 starts Nov 10, 2025
+        const raceDate = new Date('2026-02-27'); // Race day: Feb 27, 2026
+
+        // Week start dates (all Mondays)
+        const weekStartDates = [
+            new Date('2025-11-10'), // Week 1
+            new Date('2025-11-17'), // Week 2
+            new Date('2025-11-24'), // Week 3
+            new Date('2025-12-01'), // Week 4
+            new Date('2025-12-08'), // Week 5
+            new Date('2025-12-15'), // Week 6
+            new Date('2025-12-22'), // Week 7
+            new Date('2025-12-29'), // Week 8
+            new Date('2026-01-05'), // Week 9
+            new Date('2026-01-12'), // Week 10
+            new Date('2026-01-19'), // Week 11
+            new Date('2026-01-26'), // Week 12
+            new Date('2026-02-02'), // Week 13
+            new Date('2026-02-09'), // Week 14
+            new Date('2026-02-16'), // Week 15
+            new Date('2026-02-23')  // Week 16 (race week)
+        ];
+
+        function getCurrentWeek() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time to midnight for accurate comparison
+
+            // If before plan starts, show week 1
+            if (today < planStartDate) {
+                return 1;
+            }
+
+            // If after race day, show week 16
+            if (today > raceDate) {
+                return 16;
+            }
+
+            // Find which week we're in
+            for (let i = 0; i < weekStartDates.length; i++) {
+                const weekStart = new Date(weekStartDates[i]);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6); // Week ends on Sunday
+
+                if (today >= weekStart && today <= weekEnd) {
+                    return i + 1;
+                }
+            }
+
+            // Default to week 1 if something goes wrong
+            return 1;
+        }
+
+        function getDaysToRace() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const race = new Date(raceDate);
+            race.setHours(0, 0, 0, 0);
+
+            const diffTime = race - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            return diffDays >= 0 ? diffDays : 0;
+        }
+
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function updateDashboard() {
+            const currentWeek = getCurrentWeek();
+            const progress = Math.round((currentWeek / totalWeeks) * 100);
+            const daysToRace = getDaysToRace();
+            const today = new Date();
+
+            // Update today's date display
+            document.getElementById('todayDate').textContent = `Today: ${formatDate(today)}`;
+
+            document.getElementById('currentWeek').textContent = currentWeek;
+            document.getElementById('progressPercent').textContent = progress + '%';
+            document.getElementById('daysToRace').textContent = daysToRace;
+
+            // Update week highlighting
+            document.querySelectorAll('.week').forEach((week, index) => {
+                week.classList.remove('current', 'completed');
+                if (index + 1 === currentWeek) {
+                    week.classList.add('current');
+                } else if (index + 1 < currentWeek) {
+                    week.classList.add('completed');
+                }
+            });
+
+            const weekDistances = {
+                1: '50-55', 2: '55-60', 3: '60-65', 4: '50-55',
+                5: '60-70', 6: '65-72', 7: '60-65', 8: '70-75',
+                9: '70-78', 10: '75-82', 11: '65-72', 12: '75-80',
+                13: '60-65', 14: '50-55', 15: '40-45', 16: '25-35'
+            };
+            document.getElementById('weeklyKm').textContent = weekDistances[currentWeek];
+        }
+
+        // Initialize
+        renderCalendar();
+        updateDashboard();
+
+        // Update dashboard every hour in case date changes while page is open
+        setInterval(updateDashboard, 60 * 60 * 1000);
+
+        // Also update at midnight (in case page is left open overnight)
+        const now = new Date();
+        const millisTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0) - now;
+        setTimeout(function() {
+            updateDashboard();
+            // Then update every 24 hours
+            setInterval(updateDashboard, 24 * 60 * 60 * 1000);
+        }, millisTillMidnight);
+    </script>
+</body>
+</html>
